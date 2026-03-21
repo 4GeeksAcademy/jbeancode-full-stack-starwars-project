@@ -38,6 +38,8 @@ class User(db.Model):
         return {
             "id": self.id,
             "email": self.email,
+            "favorite_characters": [character.serialize() for character in self.favorite_characters],
+            "favorite_planets": [planet.serialize() for planet in self.favorite_planets],
             # do not serialize the password, it is a security breach
         }
 
@@ -53,6 +55,18 @@ class Character(db.Model):
     planet: Mapped["Planet"] = relationship("Planet", back_populates="characters")
     favorited_by_users: Mapped[List["User"]] = relationship("User", secondary=user_favorite_characters, back_populates="favorite_characters",)
 
+    def serialize(self):
+        return {
+            "id": self.id,
+            "char_image": self.char_image,
+            "name": self.name,
+            "age": self.age,
+            "description": self.age,
+            "planet": self.planet.name,
+            "favorited_by_users": [user.email for user in self.favorited_by_users],
+            # do not serialize the password, it is a security breach
+        }
+
 
 class Planet(db.Model):
     __tablename__ = "planet"
@@ -62,3 +76,14 @@ class Planet(db.Model):
     population: Mapped[int] = mapped_column()
     characters: Mapped[List["Character"]] = relationship("Character", back_populates="planet")
     favorited_by_users: Mapped[List["User"]] = relationship("User", secondary=user_favorite_planets, back_populates="favorite_planets",)
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "terrain": self.terrain,
+            "planet_image": self.planet_image,
+            "population": self.population,
+            "characters": [character.name for character in self.characters],
+            "favorited_by_users": [user.email for user in self.favorited_by_users],
+            # do not serialize the password, it is a security breach
+        }
