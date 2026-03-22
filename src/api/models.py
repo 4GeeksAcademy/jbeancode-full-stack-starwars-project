@@ -71,6 +71,7 @@ class Character(db.Model):
 class Planet(db.Model):
     __tablename__ = "planet"
     id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(50))
     terrain: Mapped[str] = mapped_column(String(500))
     planet_image: Mapped[str] = mapped_column(String(500))
     population: Mapped[int] = mapped_column()
@@ -80,6 +81,7 @@ class Planet(db.Model):
     def serialize(self):
         return {
             "id": self.id,
+            "name": self.name,
             "terrain": self.terrain,
             "planet_image": self.planet_image,
             "population": self.population,

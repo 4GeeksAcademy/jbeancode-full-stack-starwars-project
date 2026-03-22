@@ -22,6 +22,10 @@ def handle_hello():
 
     return jsonify(response_body), 200
 
+# so I am able to delete, post, and get all from our html interface, and see those once I use a 'GET' method on postman, BUT
+# I am not able to delete or post from postman, I get a 404 error.
+#I am also not able to see the favorites when I use the 'GET' method on postman.
+
 
 @api.route('/people', methods=['GET'])
 def get_all_people():
