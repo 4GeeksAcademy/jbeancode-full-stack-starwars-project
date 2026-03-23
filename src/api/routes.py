@@ -80,9 +80,9 @@ def get_user_favorites(user_id):
         return jsonify({"msg: User does not exist"}), 404
     serialized_user = found_user.serialize()
     return jsonify({
-        "user_id": serialized_user.id,
-        "favorite_characters": serialized_user.favorite_characters,
-        "favorite_planets": serialized_user.favorite_planets,
+        "user_id": serialized_user["id"],
+        "favorite_characters": serialized_user["favorite_characters"],
+        "favorite_planets": serialized_user["favorite_planets"],
     })
 
 
@@ -96,11 +96,8 @@ def new_favorite_planet(planet_id):
     found_user.favorite_planets.append(new_fav_planet)
     db.session.commit()
     serialized_user = found_user.serialize()
-    return jsonify({"favorite_planets": serialized_user.favorite_planets}), 200
-#we had the below, but I think it needs to be adjusted to planets from characters since this is the 'new_fav_planet' function  
-    #return jsonify({"favorite_characters": serialized_user.favorite_characters}), 200
+    return jsonify({"favorite_planets": serialized_user["favorite_planets"]}), 200
 
-# use above structure for last 3 routes below:
 #when using postman dont forget the /api before our endpoints (paths above on routes)
 
 @api.route('/favorite/people/<int:people_id>', methods=['POST'])
@@ -113,7 +110,7 @@ def new_favorite_person(people_id):
     found_user.favorite_characters.append(new_fav_char)
     db.session.commit()
     serialized_user = found_user.serialize()
-    return jsonify({"favorite_characters": serialized_user.favorite_characters}), 200
+    return jsonify({"favorite_characters": serialized_user["favorite_characters"]}), 200
 
 
 @api.route('/favorite/people/<int:people_id>', methods=['DELETE'])
@@ -126,7 +123,7 @@ def delete_favorite_person(people_id):
     found_user.favorite_characters.remove(del_fav_char)
     db.session.commit()
     serialized_user = found_user.serialize()
-    return jsonify({"favorite_characters": serialized_user.favorite_characters}), 200
+    return jsonify({"favorite_characters": serialized_user["favorite_characters"]}), 200
 
 @api.route('/favorite/planet/<int:planet_id>', methods=['DELETE'])
 def delete_favorite_planet(planet_id):
@@ -138,5 +135,5 @@ def delete_favorite_planet(planet_id):
     found_user.favorite_planets.remove(del_fav_plan)
     db.session.commit()
     serialized_user = found_user.serialize()
-    return jsonify({"favorite_planets": serialized_user.favorite_planets}), 200
+    return jsonify({"favorite_planets": serialized_user["favorite_planets"]}), 200
 
