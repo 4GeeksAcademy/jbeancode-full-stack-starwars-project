@@ -1,11 +1,14 @@
 """
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
-from flask import Flask, request, jsonify, url_for, Blueprint
+from email.mime import application
+
+from flask import Flask, json, request, jsonify, url_for, Blueprint
 from api.models import db, User, Character, Planet
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from sqlalchemy import select
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 
 api = Blueprint('api', __name__)
 
@@ -22,9 +25,15 @@ def handle_hello():
 
     return jsonify(response_body), 200
 
-# so I am able to delete, post, and get all from our html interface, and see those once I use a 'GET' method on postman, BUT
-# I am not able to delete or post from postman, I get a 404 error.
-#I am also not able to see the favorites when I use the 'GET' method on postman.
+@api.route('/token', methods=['POST'])
+def create_token():
+    email = request.json.get("email", None)
+    password = request.json.get("password", None)
+    user = db.session.execute(select(User).filter_by(email=email, password=password)).scalar_one_or_none()
+    if user is None:
+        return jsonify({"msg": "Incorrect Email or password"}), 401
+    access_token = create_access_token(identity=user.id)
+    return jsonify(access_token=access_token), 200
 
 
 @api.route('/people', methods=['GET'])
