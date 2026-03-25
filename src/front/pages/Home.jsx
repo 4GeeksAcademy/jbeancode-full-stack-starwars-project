@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import rigoImageUrl from "../assets/img/rigo-baby.jpg";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
@@ -28,25 +28,59 @@ export const Home = () => {
 
 	}
 
+	// I NEED A USE STATE HERE TO SAVE USERNAME AND PASSWORD - from the form??
+
+
+	// const login = async (email, password) => {
+	// 	const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/login", {
+	// 		method: "POST",
+	// 		headers: { "Content-Type": "application/json" },
+	// 		body: JSON.stringify({ email, password })
+	// 	})
+	// 	if (!response.ok) {
+	// 		if (response.status === 401) throw new Error("Invalid credentials")
+	// 		else if (response.status === 400) throw new Error("User not found")
+	// 		else throw new Error("Login failed")
+	// 	}
+	// 	const data = await response.json()
+	// 	localStorage.setItem("token", data.access_token);
+
+	// 	return data
+	// }
+
+
 	useEffect(() => {
 		loadMessage()
 	}, [])
 
+	// do I need to add an onSubmit function to the form that calls the login function?
+	// do I need to import password and email from somewhere? or do I need to create a useState for them?
 	return (
 		<div className="text-center mt-5">
-			<h1 className="display-4">Hello Rigo!!</h1>
-			<p className="lead">
-				<img src={rigoImageUrl} className="img-fluid rounded-circle mb-3" alt="Rigo Baby" />
-			</p>
-			<div className="alert alert-info">
-				{store.message ? (
-					<span>{store.message}</span>
-				) : (
-					<span className="text-danger">
-						Loading message from the backend (make sure your python 🐍 backend is running)...
-					</span>
-				)}
-			</div>
+			<h1 className="display-4">Welcome to the Star Wars API</h1>
+			{<form>
+				<div>
+					<label>Email:</label>
+					<input
+						type="email"
+						//value={email} user.email ??
+						//onChange={(e) => setEmail(e.target.value)}
+						//required
+					/>
+				</div>
+				<div>
+					<label>Password:</label>
+					<input
+						type="password"
+						//value={password}
+						//onChange={(e) => setPassword(e.target.value)}
+						//required
+					/>
+				</div>
+				<button className="btn btn-primary me-3" type = "submit" onClick={loadMessage}>Login!</button>
+				<button className="btn btn-secondary" type = "submit" onClick={loadMessage}>Sign Up!</button>
+			</form>}
+
 		</div>
 	);
 }; 

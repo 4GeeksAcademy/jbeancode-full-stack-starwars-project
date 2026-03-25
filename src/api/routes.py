@@ -25,8 +25,8 @@ def handle_hello():
 
     return jsonify(response_body), 200
 
-@api.route('/token', methods=['POST'])
-def create_token():
+@api.route('/signup', methods=['POST'])
+def create_signup_token():
     email = request.json.get("email", None)
     password = request.json.get("password", None)
     user = db.session.execute(select(User).filter_by(email=email, password=password)).scalar_one_or_none()
@@ -35,6 +35,15 @@ def create_token():
     access_token = create_access_token(identity=user.id)
     return jsonify(access_token=access_token), 200
 
+@api.route('/login', methods=['POST'])
+def create_login_token():
+    email = request.json.get("email", None)
+    password = request.json.get("password", None)
+    user = db.session.execute(select(User).filter_by(email=email, password=password)).scalar_one_or_none()
+    if user is None:
+        return jsonify({"msg": "Incorrect Email or password"}), 401
+    access_token = create_access_token(identity=user.id)
+    return jsonify(access_token=access_token), 200
 
 @api.route('/people', methods=['GET'])
 def get_all_people():
@@ -48,14 +57,12 @@ def get_all_people():
     return jsonify(list_of_dictionaries), 200
         # now we jsonify the list of dictionaries so it can be sent (to the front end??)
 
-
 @api.route('/people/<int:people_id>', methods=['GET'])
 def get_one_person(people_id):
     found_person = db.session.get(Character, people_id)
     if found_person is None:
         return jsonify({"msg: Character does not exist"}), 404
     return jsonify(found_person.serialize()), 200
-
 
 @api.route('/planets', methods=['GET'])
 def get_all_planets():
@@ -83,7 +90,9 @@ def get_all_users():
     return jsonify(list_of_dictionaries), 200
 
 @api.route('/users/<int:user_id>/favorites', methods=['GET'])
+@jwt_required()
 def get_user_favorites(user_id):
+    user_id = get_jwt_identity()
     found_user = db.session.get(User, user_id)
     if found_user is None:
         return jsonify({"msg: User does not exist"}), 404
@@ -92,13 +101,15 @@ def get_user_favorites(user_id):
         "user_id": serialized_user["id"],
         "favorite_characters": serialized_user["favorite_characters"],
         "favorite_planets": serialized_user["favorite_planets"],
-    })
+    }), 200
 
 
 @api.route('/favorite/planet/<int:planet_id>', methods=['POST'])
+@jwt_required()
 def new_favorite_planet(planet_id):
-    body = request.json
-    found_user = db.session.get(User, body["user_id"])
+    #body = request.json (i took out the below from the found_user variable - body["user_id"]) - bc I dont think it's needed??)
+    user_id = get_jwt_identity() 
+    found_user = db.session.get(User, user_id)
     new_fav_planet = db.session.get(Planet, planet_id)
     if found_user is None or new_fav_planet is None:
         return jsonify({"msg: Planet or User was not found"}), 404
@@ -110,9 +121,11 @@ def new_favorite_planet(planet_id):
 #when using postman dont forget the /api before our endpoints (paths above on routes)
 
 @api.route('/favorite/people/<int:people_id>', methods=['POST'])
+@jwt_required()
+
 def new_favorite_person(people_id):
-    body = request.json
-    found_user = db.session.get(User, body["user_id"])
+    user_id = get_jwt_identity()
+    found_user = db.session.get(User, user_id)
     new_fav_char = db.session.get(Character, people_id)
     if found_user is None or new_fav_char is None:
         return jsonify({"msg: Charcter or User was not found"}), 404
@@ -123,9 +136,11 @@ def new_favorite_person(people_id):
 
 
 @api.route('/favorite/people/<int:people_id>', methods=['DELETE'])
+@jwt_required()
+
 def delete_favorite_person(people_id):
-    body = request.json
-    found_user = db.session.get(User, body["user_id"])
+    user_id = get_jwt_identity()
+    found_user = db.session.get(User, user_id)
     del_fav_char = db.session.get(Character, people_id)
     if found_user is None or del_fav_char is None:
         return jsonify({"msg: Charcter or User was not found"}), 404
@@ -135,9 +150,11 @@ def delete_favorite_person(people_id):
     return jsonify({"favorite_characters": serialized_user["favorite_characters"]}), 200
 
 @api.route('/favorite/planet/<int:planet_id>', methods=['DELETE'])
+@jwt_required()
+
 def delete_favorite_planet(planet_id):
-    body = request.json
-    found_user = db.session.get(User, body["user_id"])
+    user_id = get_jwt_identity()
+    found_user = db.session.get(User, user_id)
     del_fav_plan = db.session.get(Planet, planet_id)
     if found_user is None or del_fav_plan is None:
         return jsonify({"msg: Planet or User was not found"}), 404
