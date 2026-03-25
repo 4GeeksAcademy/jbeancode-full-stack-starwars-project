@@ -28,26 +28,44 @@ export const Home = () => {
 
 	}
 
-	// I NEED A USE STATE HERE TO SAVE USERNAME AND PASSWORD - from the form??
+	const [email, setEmail] = useState("")
+	const [password, setPassword] = useState("")
+	const [error, setError] = useState("")
+	const [isLoading, setIsLoading] = useState(false)
 
+	const login = async (email, password) => {
+		const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/login", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ email, password })
+		})
 
-	// const login = async (email, password) => {
-	// 	const response = await fetch(import.meta.env.VITE_BACKEND_URL + "/login", {
-	// 		method: "POST",
-	// 		headers: { "Content-Type": "application/json" },
-	// 		body: JSON.stringify({ email, password })
-	// 	})
-	// 	if (!response.ok) {
-	// 		if (response.status === 401) throw new Error("Invalid credentials")
-	// 		else if (response.status === 400) throw new Error("User not found")
-	// 		else throw new Error("Login failed")
-	// 	}
-	// 	const data = await response.json()
-	// 	localStorage.setItem("token", data.access_token);
+		if (!response.ok) {
+			if (response.status === 401) throw new Error("Invalid credentials")
+			else if (response.status === 404) throw new Error("User not found")
+			else throw new Error("Login failed")
+		}
 
-	// 	return data
-	// }
+		const data = await response.json()
+		localStorage.setItem("token", data.access_token)
+		return data
+	}
 
+	const handleLogin = async (event) => {
+		event.preventDefault()
+		setError("")
+		setIsLoading(true)
+
+		//change this error handling (if nots, etc.)
+		try {
+			await login(email, password)
+			dispatch({ type: "set_hello", payload: "Logged in successfully" })
+		} catch (err) {
+			setError(err.message || "Login failed")
+		} finally {
+			setIsLoading(false)
+		}
+	}
 
 	useEffect(() => {
 		loadMessage()
@@ -58,28 +76,30 @@ export const Home = () => {
 	return (
 		<div className="text-center mt-5">
 			<h1 className="display-4">Welcome to the Star Wars API</h1>
-			{<form>
+			<form onSubmit={handleLogin}>
 				<div>
 					<label>Email:</label>
 					<input
 						type="email"
-						//value={email} user.email ??
-						//onChange={(e) => setEmail(e.target.value)}
-						//required
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
+						required
 					/>
 				</div>
 				<div>
 					<label>Password:</label>
 					<input
 						type="password"
-						//value={password}
-						//onChange={(e) => setPassword(e.target.value)}
-						//required
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
+						required
 					/>
 				</div>
-				<button className="btn btn-primary me-3" type = "submit" onClick={loadMessage}>Login!</button>
-				<button className="btn btn-secondary" type = "submit" onClick={loadMessage}>Sign Up!</button>
-			</form>}
+				<button className="btn btn-primary me-3" type="submit" disabled={isLoading}>Login</button>
+				<button className="btn btn-secondary" type="button" onClick={loadMessage}>Refresh Message</button>
+			</form>
+			{error && <p className="text-danger">{error}</p>}
+			{isLoading && <p>Checking credentials...</p>}
 
 		</div>
 	);

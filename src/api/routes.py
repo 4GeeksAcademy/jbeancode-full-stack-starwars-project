@@ -25,25 +25,35 @@ def handle_hello():
 
     return jsonify(response_body), 200
 
+
 @api.route('/signup', methods=['POST'])
 def create_signup_token():
     email = request.json.get("email", None)
     password = request.json.get("password", None)
-    user = db.session.execute(select(User).filter_by(email=email, password=password)).scalar_one_or_none()
-    if user is None:
-        return jsonify({"msg": "Incorrect Email or password"}), 401
-    access_token = create_access_token(identity=user.id)
-    return jsonify(access_token=access_token), 200
+    user = db.session.execute(select(User).filter_by(
+        email=email)).scalar_one_or_none()
+    if user is not None:
+        return jsonify({"msg": "User already exists"}), 401
+    new_user = User()
+    new_user.email = email
+    new_user.password = password
+    new_user.is_active = True
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({"msg": "User successfully created"}), 201
+    
 
 @api.route('/login', methods=['POST'])
 def create_login_token():
     email = request.json.get("email", None)
     password = request.json.get("password", None)
-    user = db.session.execute(select(User).filter_by(email=email, password=password)).scalar_one_or_none()
+    user = db.session.execute(select(User).filter_by(
+        email=email, password=password)).scalar_one_or_none()
     if user is None:
         return jsonify({"msg": "Incorrect Email or password"}), 401
-    access_token = create_access_token(identity=user.id)
+    access_token = create_access_token(identity=str(user.id))
     return jsonify(access_token=access_token), 200
+
 
 @api.route('/people', methods=['GET'])
 def get_all_people():
@@ -55,7 +65,8 @@ def get_all_people():
         list_of_dictionaries.append(person.serialize())
         # Now there is a list of dictionaries stored in the variable 'list_of_dictionaries'
     return jsonify(list_of_dictionaries), 200
-        # now we jsonify the list of dictionaries so it can be sent (to the front end??)
+    # now we jsonify the list of dictionaries so it can be sent (to the front end??)
+
 
 @api.route('/people/<int:people_id>', methods=['GET'])
 def get_one_person(people_id):
@@ -64,6 +75,7 @@ def get_one_person(people_id):
         return jsonify({"msg: Character does not exist"}), 404
     return jsonify(found_person.serialize()), 200
 
+
 @api.route('/planets', methods=['GET'])
 def get_all_planets():
     all_planets = db.session.execute(select(Planet)).scalars().all()
@@ -71,7 +83,7 @@ def get_all_planets():
     for planet in all_planets:
         list_of_dictionaries.append(planet.serialize())
     return jsonify(list_of_dictionaries), 200
-    
+
 
 @api.route('/planets/<int:planet_id>', methods=['GET'])
 def get_one_planet(planet_id):
@@ -89,9 +101,10 @@ def get_all_users():
         list_of_dictionaries.append(user.serialize())
     return jsonify(list_of_dictionaries), 200
 
-@api.route('/users/<int:user_id>/favorites', methods=['GET'])
+
+@api.route('/users/favorites', methods=['GET'])
 @jwt_required()
-def get_user_favorites(user_id):
+def get_user_favorites():
     user_id = get_jwt_identity()
     found_user = db.session.get(User, user_id)
     if found_user is None:
@@ -107,8 +120,8 @@ def get_user_favorites(user_id):
 @api.route('/favorite/planet/<int:planet_id>', methods=['POST'])
 @jwt_required()
 def new_favorite_planet(planet_id):
-    #body = request.json (i took out the below from the found_user variable - body["user_id"]) - bc I dont think it's needed??)
-    user_id = get_jwt_identity() 
+    # body = request.json (i took out the below from the found_user variable - body["user_id"]) - bc I dont think it's needed??)
+    user_id = get_jwt_identity()
     found_user = db.session.get(User, user_id)
     new_fav_planet = db.session.get(Planet, planet_id)
     if found_user is None or new_fav_planet is None:
@@ -118,11 +131,11 @@ def new_favorite_planet(planet_id):
     serialized_user = found_user.serialize()
     return jsonify({"favorite_planets": serialized_user["favorite_planets"]}), 200
 
-#when using postman dont forget the /api before our endpoints (paths above on routes)
+# when using postman dont forget the /api before our endpoints (paths above on routes)
+
 
 @api.route('/favorite/people/<int:people_id>', methods=['POST'])
 @jwt_required()
-
 def new_favorite_person(people_id):
     user_id = get_jwt_identity()
     found_user = db.session.get(User, user_id)
@@ -137,7 +150,6 @@ def new_favorite_person(people_id):
 
 @api.route('/favorite/people/<int:people_id>', methods=['DELETE'])
 @jwt_required()
-
 def delete_favorite_person(people_id):
     user_id = get_jwt_identity()
     found_user = db.session.get(User, user_id)
@@ -149,9 +161,9 @@ def delete_favorite_person(people_id):
     serialized_user = found_user.serialize()
     return jsonify({"favorite_characters": serialized_user["favorite_characters"]}), 200
 
+
 @api.route('/favorite/planet/<int:planet_id>', methods=['DELETE'])
 @jwt_required()
-
 def delete_favorite_planet(planet_id):
     user_id = get_jwt_identity()
     found_user = db.session.get(User, user_id)
@@ -162,4 +174,3 @@ def delete_favorite_planet(planet_id):
     db.session.commit()
     serialized_user = found_user.serialize()
     return jsonify({"favorite_planets": serialized_user["favorite_planets"]}), 200
-
